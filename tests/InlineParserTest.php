@@ -141,10 +141,14 @@ class InlineParserTest extends TestCase {
         $this->assertSame('strike', $nodes[0]->children[0]->text);
     }
 
-    public function testTripleTildeIsNotStrikethrough(): void {
+    public function testTripleTildeIsStrikethroughOnly(): void {
+        // 仕様書：~~~not~~~ のような場合は内側のペアのみを認識し、余剰の ~ は破棄してキレイなStrikethroughにする
         $nodes = $this->parse('~~~not~~~');
         $this->assertCount(1, $nodes);
-        $this->assertInstanceOf(TextNode::class, $nodes[0]);
+        
+        $this->assertInstanceOf(StrikethroughNode::class, $nodes[0]);
+        $this->assertInstanceOf(TextNode::class, $nodes[0]->children[0]);
+        $this->assertSame('not', $nodes[0]->children[0]->text);
     }
 
     // ============================================================
