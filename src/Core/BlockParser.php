@@ -248,6 +248,29 @@ class BlockParser {
     // ============================================================
 
     /**
+     * Helper to extract inner lines of a custom block, advancing the index.
+     * @return string[]
+     */
+    private static function extractWarpLikeBlockContent(array $lines, int &$i, int $len): array {
+        $innerLines = [];
+        $i++; // Move past the opening tag
+        $depth = 0;
+        while ($i < $len) {
+            $l = $lines[$i];
+            if (preg_match('/^:::(header|footer)\s*$/', $l) || preg_match('/^:::warp\s+\S/', $l) || preg_match('/^:::details\s+/', $l)) {
+                $depth++;
+            } elseif (preg_match('/^\s*:::\s*$/', $l)) {
+                if ($depth === 0) break;
+                $depth--;
+            }
+            $innerLines[] = $l;
+            $i++;
+        }
+        $i++; // skip :::
+        return $innerLines;
+    }
+
+    /**
      * @return array{header: ?HeaderContainerNode, footer: ?FooterContainerNode, warpDefs: array<string, WarpDefinitionNode>, remainingLines: string[], detailsBlocks: array{startIdx: int, node: DetailsNode}[]}
      */
     private static function extractCustomBlocks(array $lines, ParseContext $ctx): array {
@@ -265,21 +288,7 @@ class BlockParser {
             $line = $lines[$i];
 
             if (preg_match('/^:::header\s*$/', $line)) {
-                $innerLines = [];
-                $i++;
-                $depth = 0;
-                while ($i < $len) {
-                    $l = $lines[$i];
-                    if (preg_match('/^:::(header|footer)\s*$/', $l) || preg_match('/^:::warp\s+\S/', $l) || preg_match('/^:::details\s+/', $l)) {
-                        $depth++;
-                    } elseif (preg_match('/^\s*:::\s*$/', $l)) {
-                        if ($depth === 0) break;
-                        $depth--;
-                    }
-                    $innerLines[] = $l;
-                    $i++;
-                }
-                $i++; // skip :::
+                $innerLines = self::extractWarpLikeBlockContent($lines, $i, $len);
 
                 $nested = self::extractCustomBlocks($innerLines, $ctx);
                 foreach ($nested['warpDefs'] as $wid => $wdef) $warpDefs[$wid] = $wdef;
@@ -294,21 +303,7 @@ class BlockParser {
             }
 
             if (preg_match('/^:::footer\s*$/', $line)) {
-                $innerLines = [];
-                $i++;
-                $depth = 0;
-                while ($i < $len) {
-                    $l = $lines[$i];
-                    if (preg_match('/^:::(header|footer)\s*$/', $l) || preg_match('/^:::warp\s+\S/', $l) || preg_match('/^:::details\s+/', $l)) {
-                        $depth++;
-                    } elseif (preg_match('/^\s*:::\s*$/', $l)) {
-                        if ($depth === 0) break;
-                        $depth--;
-                    }
-                    $innerLines[] = $l;
-                    $i++;
-                }
-                $i++;
+                $innerLines = self::extractWarpLikeBlockContent($lines, $i, $len);
 
                 $nested = self::extractCustomBlocks($innerLines, $ctx);
                 foreach ($nested['warpDefs'] as $wid => $wdef) $warpDefs[$wid] = $wdef;
@@ -324,21 +319,7 @@ class BlockParser {
 
             if (preg_match('/^:::warp\s+(\S+)\s*$/', $line, $warpM)) {
                 $id = $warpM[1];
-                $innerLines = [];
-                $i++;
-                $depth = 0;
-                while ($i < $len) {
-                    $l = $lines[$i];
-                    if (preg_match('/^:::(header|footer)\s*$/', $l) || preg_match('/^:::warp\s+\S/', $l) || preg_match('/^:::details\s+/', $l)) {
-                        $depth++;
-                    } elseif (preg_match('/^\s*:::\s*$/', $l)) {
-                        if ($depth === 0) break;
-                        $depth--;
-                    }
-                    $innerLines[] = $l;
-                    $i++;
-                }
-                $i++;
+                $innerLines = self::extractWarpLikeBlockContent($lines, $i, $len);
                 
                 $children = self::parseBlocks($innerLines, $ctx);
                 if (isset($warpDefs[$id])) {
@@ -350,22 +331,8 @@ class BlockParser {
 
             if (preg_match('/^:::details\s+(.*?)\s*$/', $line, $detailsM)) {
                 $title = $detailsM[1];
-                $innerLines = [];
                 $startIdx = count($remainingLines);
-                $i++;
-                $depth = 0;
-                while ($i < $len) {
-                    $l = $lines[$i];
-                    if (preg_match('/^:::(header|footer)\s*$/', $l) || preg_match('/^:::warp\s+\S/', $l) || preg_match('/^:::details\s+/', $l)) {
-                        $depth++;
-                    } elseif (preg_match('/^\s*:::\s*$/', $l)) {
-                        if ($depth === 0) break;
-                        $depth--;
-                    }
-                    $innerLines[] = $l;
-                    $i++;
-                }
-                $i++;
+                $innerLines = self::extractWarpLikeBlockContent($lines, $i, $len);
 
                 $nested = self::extractCustomBlocks($innerLines, $ctx);
                 foreach ($nested['warpDefs'] as $wid => $wdef) $warpDefs[$wid] = $wdef;
