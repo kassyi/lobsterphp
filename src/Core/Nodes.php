@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace Kassyi\LobsterPhp\Core;
 
+use Kassyi\LobsterPhp\Core\Visitor\NodeVisitorInterface;
+
 // ============================================================
 // Base Interfaces
 // ============================================================
 
-interface AstNode {}
+interface AstNode {
+    public function accept(NodeVisitorInterface $visitor): mixed;
+}
 
 interface InlineNode extends AstNode {}
 interface BlockNode extends AstNode {}
@@ -21,6 +25,7 @@ readonly class TextNode implements InlineNode {
     public function __construct(
         public string $text
     ) {}
+    public function accept(NodeVisitorInterface $visitor): mixed { return $visitor->visitTextNode($this); }
 }
 
 readonly class EmphasisNode implements InlineNode {
@@ -28,6 +33,7 @@ readonly class EmphasisNode implements InlineNode {
     public function __construct(
         public array $children
     ) {}
+    public function accept(NodeVisitorInterface $visitor): mixed { return $visitor->visitEmphasisNode($this); }
 }
 
 readonly class StrongNode implements InlineNode {
@@ -35,6 +41,7 @@ readonly class StrongNode implements InlineNode {
     public function __construct(
         public array $children
     ) {}
+    public function accept(NodeVisitorInterface $visitor): mixed { return $visitor->visitStrongNode($this); }
 }
 
 readonly class StrikethroughNode implements InlineNode {
@@ -42,12 +49,14 @@ readonly class StrikethroughNode implements InlineNode {
     public function __construct(
         public array $children
     ) {}
+    public function accept(NodeVisitorInterface $visitor): mixed { return $visitor->visitStrikethroughNode($this); }
 }
 
 readonly class CodeSpanNode implements InlineNode {
     public function __construct(
         public string $code
     ) {}
+    public function accept(NodeVisitorInterface $visitor): mixed { return $visitor->visitCodeSpanNode($this); }
 }
 
 readonly class InlineLinkNode implements InlineNode {
@@ -57,6 +66,7 @@ readonly class InlineLinkNode implements InlineNode {
         public string $href,
         public ?string $title = null
     ) {}
+    public function accept(NodeVisitorInterface $visitor): mixed { return $visitor->visitInlineLinkNode($this); }
 }
 
 readonly class LinkNode implements InlineNode {
@@ -66,6 +76,7 @@ readonly class LinkNode implements InlineNode {
         public string $href,
         public ?string $title = null
     ) {}
+    public function accept(NodeVisitorInterface $visitor): mixed { return $visitor->visitLinkNode($this); }
 }
 
 readonly class ImageNode implements InlineNode {
@@ -76,12 +87,14 @@ readonly class ImageNode implements InlineNode {
         public ?int $width = null,
         public ?int $height = null
     ) {}
+    public function accept(NodeVisitorInterface $visitor): mixed { return $visitor->visitImageNode($this); }
 }
 
 readonly class FootnoteRefNode implements InlineNode {
     public function __construct(
         public string $id
     ) {}
+    public function accept(NodeVisitorInterface $visitor): mixed { return $visitor->visitFootnoteRefNode($this); }
 }
 
 readonly class InlineFootnoteNode implements InlineNode {
@@ -89,15 +102,19 @@ readonly class InlineFootnoteNode implements InlineNode {
     public function __construct(
         public array $children
     ) {}
+    public function accept(NodeVisitorInterface $visitor): mixed { return $visitor->visitInlineFootnoteNode($this); }
 }
 
 readonly class WarpRefNode implements InlineNode {
     public function __construct(
         public string $id
     ) {}
+    public function accept(NodeVisitorInterface $visitor): mixed { return $visitor->visitWarpRefNode($this); }
 }
 
-readonly class LineBreakNode implements InlineNode {}
+readonly class LineBreakNode implements InlineNode {
+    public function accept(NodeVisitorInterface $visitor): mixed { return $visitor->visitLineBreakNode($this); }
+}
 
 // ============================================================
 // Block AST Nodes
@@ -110,6 +127,7 @@ readonly class HeadingNode implements BlockNode {
         public array $children,
         public ?string $id = null
     ) {}
+    public function accept(NodeVisitorInterface $visitor): mixed { return $visitor->visitHeadingNode($this); }
 }
 
 readonly class ParagraphNode implements BlockNode {
@@ -117,9 +135,12 @@ readonly class ParagraphNode implements BlockNode {
     public function __construct(
         public array $children
     ) {}
+    public function accept(NodeVisitorInterface $visitor): mixed { return $visitor->visitParagraphNode($this); }
 }
 
-readonly class HorizontalRuleNode implements BlockNode {}
+readonly class HorizontalRuleNode implements BlockNode {
+    public function accept(NodeVisitorInterface $visitor): mixed { return $visitor->visitHorizontalRuleNode($this); }
+}
 
 readonly class CodeBlockNode implements BlockNode {
     public function __construct(
@@ -127,6 +148,7 @@ readonly class CodeBlockNode implements BlockNode {
         public ?string $language = null,
         public ?string $filename = null
     ) {}
+    public function accept(NodeVisitorInterface $visitor): mixed { return $visitor->visitCodeBlockNode($this); }
 }
 
 readonly class BlockquoteNode implements BlockNode {
@@ -134,6 +156,7 @@ readonly class BlockquoteNode implements BlockNode {
     public function __construct(
         public array $children
     ) {}
+    public function accept(NodeVisitorInterface $visitor): mixed { return $visitor->visitBlockquoteNode($this); }
 }
 
 readonly class ListItemNode {
@@ -143,6 +166,7 @@ readonly class ListItemNode {
         public ?bool $checked = null,
         public BulletListNode|OrderedListNode|null $sublist = null
     ) {}
+    public function accept(NodeVisitorInterface $visitor): mixed { return $visitor->visitListItemNode($this); }
 }
 
 readonly class BulletListNode implements BlockNode {
@@ -151,6 +175,7 @@ readonly class BulletListNode implements BlockNode {
         public int $depth,
         public array $items
     ) {}
+    public function accept(NodeVisitorInterface $visitor): mixed { return $visitor->visitBulletListNode($this); }
 }
 
 readonly class OrderedListNode implements BlockNode {
@@ -160,6 +185,7 @@ readonly class OrderedListNode implements BlockNode {
         public int $start,
         public array $items
     ) {}
+    public function accept(NodeVisitorInterface $visitor): mixed { return $visitor->visitOrderedListNode($this); }
 }
 
 enum TableAlignment: string {
@@ -190,6 +216,7 @@ readonly class TableNode implements BlockNode {
         public array $alignments,
         public array $rows
     ) {}
+    public function accept(NodeVisitorInterface $visitor): mixed { return $visitor->visitTableNode($this); }
 }
 
 readonly class HeaderContainerNode implements BlockNode {
@@ -197,6 +224,7 @@ readonly class HeaderContainerNode implements BlockNode {
     public function __construct(
         public array $children
     ) {}
+    public function accept(NodeVisitorInterface $visitor): mixed { return $visitor->visitHeaderContainerNode($this); }
 }
 
 readonly class FooterContainerNode implements BlockNode {
@@ -204,6 +232,7 @@ readonly class FooterContainerNode implements BlockNode {
     public function __construct(
         public array $children
     ) {}
+    public function accept(NodeVisitorInterface $visitor): mixed { return $visitor->visitFooterContainerNode($this); }
 }
 
 readonly class DetailsNode implements BlockNode {
@@ -212,6 +241,7 @@ readonly class DetailsNode implements BlockNode {
         public string $title,
         public array $children
     ) {}
+    public function accept(NodeVisitorInterface $visitor): mixed { return $visitor->visitDetailsNode($this); }
 }
 
 readonly class WarpDefinitionNode implements BlockNode {
@@ -220,6 +250,7 @@ readonly class WarpDefinitionNode implements BlockNode {
         public string $id,
         public array $children
     ) {}
+    public function accept(NodeVisitorInterface $visitor): mixed { return $visitor->visitWarpDefinitionNode($this); }
 }
 
 // ============================================================
