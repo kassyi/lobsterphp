@@ -179,6 +179,15 @@ class JsonRendererVisitor implements NodeVisitorInterface {
     }
 
     public function visitTableNode(TableNode $node): mixed {
+        return [
+            'type' => 'table',
+            'silent' => $node->isSilent,
+            'headers' => $this->formatTableHeaders($node),
+            'rows' => $this->formatTableRows($node),
+        ];
+    }
+
+    private function formatTableHeaders(TableNode $node): array {
         $headers = [];
         foreach ($node->headers as $i => $cell) {
             $align = $node->alignments[$i] ?? TableAlignment::Default;
@@ -188,7 +197,10 @@ class JsonRendererVisitor implements NodeVisitorInterface {
                 'colspan' => $cell->colspan,
             ];
         }
+        return $headers;
+    }
 
+    private function formatTableRows(TableNode $node): array {
         $rows = [];
         foreach ($node->rows as $row) {
             $cells = [];
@@ -210,13 +222,7 @@ class JsonRendererVisitor implements NodeVisitorInterface {
             }
             $rows[] = $cells;
         }
-
-        return [
-            'type' => 'table',
-            'silent' => $node->isSilent,
-            'headers' => $headers,
-            'rows' => $rows,
-        ];
+        return $rows;
     }
 
     public function visitHeaderContainerNode(HeaderContainerNode $node): mixed {

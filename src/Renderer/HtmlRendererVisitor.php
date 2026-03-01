@@ -183,8 +183,12 @@ class HtmlRendererVisitor implements NodeVisitorInterface {
 
     public function visitTableNode(TableNode $node): mixed {
         $tableClass = $node->isSilent ? 'lbs-table lbs-table-silent' : 'lbs-table';
+        $headerCells = $this->renderTableHeaders($node);
+        $bodyRows = $this->renderTableRows($node);
+        return '<table class="' . $tableClass . "\">\n<thead><tr>" . $headerCells . "</tr></thead>\n<tbody>\n" . implode("\n", $bodyRows) . "\n</tbody>\n</table>";
+    }
 
-        // Header
+    private function renderTableHeaders(TableNode $node): string {
         $headerCells = '';
         foreach ($node->headers as $i => $cell) {
             $align = $node->alignments[$i] ?? TableAlignment::Default;
@@ -192,28 +196,30 @@ class HtmlRendererVisitor implements NodeVisitorInterface {
             $colspanAttr = $cell->colspan !== null ? ' colspan="' . $cell->colspan . '"' : '';
             $headerCells .= '<th' . $colspanAttr . $alignAttr . '>' . $this->renderInlineNodes($cell->children) . '</th>';
         }
+        return $headerCells;
+    }
 
-        // Body
+    /** @return string[] */
+    private function renderTableRows(TableNode $node): array {
         $bodyRows = [];
         foreach ($node->rows as $row) {
             $cellsStr = '';
             foreach ($row as $i => $cell) {
-                $align = $node->alignments[$i] ?? TableAlignment::Default;
-                $alignAttr = $align !== TableAlignment::Default ? ' style="text-align:' . $align->value . '"' : '';
-                $colspanAttr = $cell->colspan !== null ? ' colspan="' . $cell->colspan . '"' : '';
-                $rowspanAttr = $cell->rowspan !== null ? ' rowspan="' . $cell->rowspan . '"' : '';
-
                 // Skip rowspan placeholder cells
                 if (count($cell->children) === 1 && $cell->children[0] instanceof TextNode && $cell->children[0]->text === '__ROWSPAN__') {
                     continue;
                 }
 
+                $align = $node->alignments[$i] ?? TableAlignment::Default;
+                $alignAttr = $align !== TableAlignment::Default ? ' style="text-align:' . $align->value . '"' : '';
+                $colspanAttr = $cell->colspan !== null ? ' colspan="' . $cell->colspan . '"' : '';
+                $rowspanAttr = $cell->rowspan !== null ? ' rowspan="' . $cell->rowspan . '"' : '';
+
                 $cellsStr .= '<td' . $colspanAttr . $rowspanAttr . $alignAttr . '>' . $this->renderInlineNodes($cell->children) . '</td>';
             }
             $bodyRows[] = '<tr>' . $cellsStr . '</tr>';
         }
-
-        return '<table class="' . $tableClass . "\">\n<thead><tr>" . $headerCells . "</tr></thead>\n<tbody>\n" . implode("\n", $bodyRows) . "\n</tbody>\n</table>";
+        return $bodyRows;
     }
 
     public function visitHeaderContainerNode(HeaderContainerNode $node): mixed {
