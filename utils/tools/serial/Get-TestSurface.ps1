@@ -2,6 +2,14 @@
 .SYNOPSIS
     ソースファイルに対応するテストファイルの有無を確認。
 #>
+<#
+.NOTES
+    【アーキテクチャ上の決定事項：直列実行の採用】
+    当ツールでは複数ツールの自動実行において、意図的に直列実行を採用しています。
+    PowerShellの別スレッド（Runspace）から php.exe などの外部コンソールアプリを呼び出すと、
+    I/Oハンドル（特に標準入力）が競合し、プロセスがデッドロック状態に陥る構造的欠陥があるためです。
+    メインスレッドに限定して直列実行することで、I/Oを正常に処理し、本来の速度と安定性を確保しています。
+#>
 param(
     [string[]]$Ext = @(".ts", ".cs", ".php"),
     [string]$ExcludePattern = "node_modules|vendor|bin|obj|Test",
@@ -58,9 +66,7 @@ function Get-PhpUnitTestResults {
         }
         
         # Run PHP directly and isolate stdout/stderr to files to prevent hanging in ForEach-Object -Parallel
-        $dummyOut = Join-Path $RootDir "ai_tmp\dummy.log"
-        $dummyErr = Join-Path $RootDir "ai_tmp\dummy_err.log"
-        $null = Start-Process -FilePath "php" -ArgumentList "`"$phpunitScript`" --log-junit `"$TempXmlPath`"" -WindowStyle Hidden -RedirectStandardOutput $dummyOut -RedirectStandardError $dummyErr -Wait
+        $null = & php $phpunitScript --log-junit $TempXmlPath 2>&1 | Out-Null
         
         if (Test-Path $TempXmlPath) {
             [xml]$PhpUnitXml = Get-Content $TempXmlPath -Raw
