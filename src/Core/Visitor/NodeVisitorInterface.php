@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Kassyi\LobsterPhp\Core\Visitor;
 
-use Kassyi\LobsterPhp\Core\{BlockquoteNode, BulletListNode, CodeBlockNode, CodeSpanNode, DetailsNode, EmphasisNode, FooterContainerNode, FootnoteRefNode, HeaderContainerNode, HeadingNode, HorizontalRuleNode, ImageNode, InlineFootnoteNode, InlineLinkNode, LineBreakNode, LinkNode, ListItemNode, OrderedListNode, ParagraphNode, StrikethroughNode, StrongNode, TableNode, TextNode, WarpDefinitionNode, WarpRefNode};
+use Kassyi\LobsterPhp\Core\{BlockquoteNode, BulletListNode, CodeBlockNode, CodeSpanNode, DetailsNode, EmphasisNode,
+    FooterContainerNode, FootnoteRefNode, HeaderContainerNode, HeadingNode, HorizontalRuleNode, ImageNode,
+    InlineFootnoteNode, InlineLinkNode, LineBreakNode, LinkNode, ListItemNode, OrderedListNode, ParagraphNode,
+    StrikethroughNode, StrongNode, TableNode, TextNode, WarpDefinitionNode, WarpRefNode};
 
 interface NodeVisitorInterface {
     // Inline Nodes
