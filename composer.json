@@ -1,0 +1,28 @@
+{
+  "name": "kassyi/lobsterphp",
+  "description": "Build web pages from Markdown only \u2014 extended parser with layout blocks, CSS-first (PHP Port)",
+  "type": "library",
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "Kassyi\\LobsterPhp\\": "src/"
+    },
+    "classmap": [
+      "src/Core/Nodes.php"
+    ]
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Kassyi\\LobsterPhp\\Tests\\": "tests/"
+    }
+  },
+  "require": {
+    "php": ">=8.3"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^11.5"
+  },
+  "scripts": {
+    "test": "phpunit"
+  }
+}
