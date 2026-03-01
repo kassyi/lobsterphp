@@ -288,39 +288,20 @@ class BlockParser {
             $line = $lines[$i];
 
             if (preg_match('/^:::header\s*$/', $line)) {
-                $innerLines = self::extractWarpLikeBlockContent($lines, $i, $len);
-
-                $nested = self::extractCustomBlocks($innerLines, $ctx);
-                foreach ($nested['warpDefs'] as $wid => $wdef) $warpDefs[$wid] = $wdef;
-                $headerChildren = self::parseBlocks($nested['remainingLines'], $ctx);
-                
-                if (!empty($nested['detailsBlocks'])) {
-                    $headerChildren = self::replaceDetailsPlaceholders($headerChildren, $nested['detailsBlocks']);
-                }
-                
-                $header = new HeaderContainerNode($headerChildren);
+                $children = self::processCustomBlock($lines, $i, $len, $ctx, $warpDefs);
+                $header = new HeaderContainerNode($children);
                 continue;
             }
 
             if (preg_match('/^:::footer\s*$/', $line)) {
-                $innerLines = self::extractWarpLikeBlockContent($lines, $i, $len);
-
-                $nested = self::extractCustomBlocks($innerLines, $ctx);
-                foreach ($nested['warpDefs'] as $wid => $wdef) $warpDefs[$wid] = $wdef;
-                $footerChildren = self::parseBlocks($nested['remainingLines'], $ctx);
-                
-                if (!empty($nested['detailsBlocks'])) {
-                    $footerChildren = self::replaceDetailsPlaceholders($footerChildren, $nested['detailsBlocks']);
-                }
-                
-                $footer = new FooterContainerNode($footerChildren);
+                $children = self::processCustomBlock($lines, $i, $len, $ctx, $warpDefs);
+                $footer = new FooterContainerNode($children);
                 continue;
             }
 
             if (preg_match('/^:::warp\s+(\S+)\s*$/', $line, $warpM)) {
                 $id = $warpM[1];
                 $innerLines = self::extractWarpLikeBlockContent($lines, $i, $len);
-                
                 $children = self::parseBlocks($innerLines, $ctx);
                 if (isset($warpDefs[$id])) {
                     $id = "__duplicate_" . $id;
@@ -332,17 +313,10 @@ class BlockParser {
             if (preg_match('/^:::details\s+(.*?)\s*$/', $line, $detailsM)) {
                 $title = $detailsM[1];
                 $startIdx = count($remainingLines);
-                $innerLines = self::extractWarpLikeBlockContent($lines, $i, $len);
-
-                $nested = self::extractCustomBlocks($innerLines, $ctx);
-                foreach ($nested['warpDefs'] as $wid => $wdef) $warpDefs[$wid] = $wdef;
-                $detailsChildren = self::parseBlocks($nested['remainingLines'], $ctx);
-
-                if (!empty($nested['detailsBlocks'])) {
-                    $detailsChildren = self::replaceDetailsPlaceholders($detailsChildren, $nested['detailsBlocks']);
-                }
-
-                $detailsNode = new DetailsNode($title, $detailsChildren);
+                
+                $children = self::processCustomBlock($lines, $i, $len, $ctx, $warpDefs);
+                
+                $detailsNode = new DetailsNode($title, $children);
                 $remainingLines[] = "__DETAILS_PLACEHOLDER_" . count($detailsBlocks) . "__";
                 $detailsBlocks[] = ['startIdx' => $startIdx, 'node' => $detailsNode];
                 continue;
@@ -359,6 +333,27 @@ class BlockParser {
             'remainingLines' => $remainingLines,
             'detailsBlocks'  => $detailsBlocks,
         ];
+    }
+
+    /**
+     * Helper to process the content of a custom block (header, footer, details)
+     * @param array<string, WarpDefinitionNode> &$warpDefs
+     * @return BlockNode[]
+     */
+    private static function processCustomBlock(array $lines, int &$i, int $len, ParseContext $ctx, array &$warpDefs): array {
+        $innerLines = self::extractWarpLikeBlockContent($lines, $i, $len);
+        $nested = self::extractCustomBlocks($innerLines, $ctx);
+        
+        foreach ($nested['warpDefs'] as $wid => $wdef) {
+            $warpDefs[$wid] = $wdef;
+        }
+        
+        $children = self::parseBlocks($nested['remainingLines'], $ctx);
+        if (!empty($nested['detailsBlocks'])) {
+            $children = self::replaceDetailsPlaceholders($children, $nested['detailsBlocks']);
+        }
+        
+        return $children;
     }
 
     /**
@@ -612,7 +607,16 @@ class BlockParser {
             $j++;
         }
 
-        // Compute rowspan values
+        self::computeTableRowspans($rows);
+
+        $node = new TableNode($isSilent, $headerCells, $alignments, $rows);
+        return ['node' => $node, 'nextIndex' => $j];
+    }
+
+    /**
+     * @param TableCellNode[][] $rows
+     */
+    private static function computeTableRowspans(array &$rows): void {
         $isRowspanCell = function (TableCellNode $cell): bool {
             return count($cell->children) === 1 && 
                    $cell->children[0] instanceof TextNode && 
@@ -638,18 +642,11 @@ class BlockParser {
                         if (isset($colMaps[$rr][$col])) {
                             $above = $colMaps[$rr][$col];
                             if (!$isRowspanCell($above)) {
-                                // Due to php objects passing by reference, modifying $above->rowspan works.
-                                // But since Node properties are readonly we have to do a small trick, or just define it as not readonly.
-                                // In `Nodes.php`, TableCellNode properties are not explicitly readonly except for the class. 
-                                // Ah! Wait. In Kassyi\LobsterPhp\Core\TableCellNode we declared `readonly class TableCellNode`.
-                                // We cannot modify property! We need to create a new instance and inject it into the map and rows array.
                                 $newRowspan = ($above->rowspan ?? 1) + 1;
                                 $newAbove = new TableCellNode($above->children, $above->colspan, $newRowspan);
                                 
-                                // Replace in maps
                                 $colMaps[$rr][$col] = $newAbove;
                                 
-                                // Replace in rows[$rr]
                                 $colIter = 0;
                                 foreach ($rows[$rr] as $idx => $c2) {
                                     if ($colIter === $col) {
@@ -666,9 +663,6 @@ class BlockParser {
                 $col += $cell->colspan ?? 1;
             }
         }
-
-        $node = new TableNode($isSilent, $headerCells, $alignments, $rows);
-        return ['node' => $node, 'nextIndex' => $j];
     }
 
     private static function parseParagraph(array $lines, int $i, ParseContext $ctx): array {
