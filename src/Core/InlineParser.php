@@ -13,7 +13,7 @@ class InlineParser {
      * Finds the next `]` that closes a `[` opened before `start`.
      * Returns -1 if not found within the same line.
      */
-    private static function findClosingBracket(string $text, int $start): int {
+    public static function findClosingBracket(string $text, int $start): int {
         $depth = 1;
         $len = strlen($text);
         for ($i = $start; $i < $len; $i++) {
@@ -36,7 +36,7 @@ class InlineParser {
      * Finds the next `)` that closes a `(` opened before `start`.
      * Returns -1 if not found.
      */
-    private static function findClosingParen(string $text, int $start): int {
+    public static function findClosingParen(string $text, int $start): int {
         $depth = 1;
         $len = strlen($text);
         for ($i = $start; $i < $len; $i++) {
@@ -57,7 +57,7 @@ class InlineParser {
      * Parses `url "title"`, `url 'title'`, `url (title)`, or just `url`.
      * @return array{href: string, title?: string|null}
      */
-    private static function parseLinkContent(string $content): array {
+    public static function parseLinkContent(string $content): array {
         $content = trim($content);
         
         if (preg_match('/^(\S+)\s+"([^"]*)"$/', $content, $m)) {
@@ -77,7 +77,7 @@ class InlineParser {
      * Parses `url "title" =WxH` for images.
      * @return array{href: string, title?: string|null, width?: int|null, height?: int|null}
      */
-    private static function parseImageContent(string $content): array {
+    public static function parseImageContent(string $content): array {
         $content = trim($content);
         $width = null;
         $height = null;
@@ -105,316 +105,21 @@ class InlineParser {
     // Individual inline matchers
     // ============================================================
 
-    /**
-     * Code span: `code`, `` `code` `` (n backticks)
-     * @return array{node: InlineNode, end: int}|null
-     */
-    private static function tryMatchCodeSpan(string $text, int $pos): ?array {
-        if (!isset($text[$pos]) || $text[$pos] !== '`') return null;
+    /** @var \Kassyi\LobsterPhp\Core\Parser\InlineMatcherInterface[] */
+    private static array $matchers = [];
 
-        $len = strlen($text);
-        $count = 0;
-        while ($pos + $count < $len && $text[$pos + $count] === '`') {
-            $count++;
+    private static function getMatchers(): array {
+        if (empty(self::$matchers)) {
+            self::$matchers = [
+                new \Kassyi\LobsterPhp\Core\Parser\Inline\CodeSpanMatcher(),
+                new \Kassyi\LobsterPhp\Core\Parser\Inline\ImageMatcher(),
+                new \Kassyi\LobsterPhp\Core\Parser\Inline\LinkMatcher(),
+                new \Kassyi\LobsterPhp\Core\Parser\Inline\StrikethroughMatcher(),
+                new \Kassyi\LobsterPhp\Core\Parser\Inline\EmphasisMatcher(),
+            ];
         }
-
-        $openStr = str_repeat('`', $count);
-        $contentStart = $pos + $count;
-        $searchPos = $contentStart;
-
-        while ($searchPos < $len) {
-            $closeIdx = strpos($text, $openStr, $searchPos);
-            if ($closeIdx === false) return null;
-            
-            // Make sure it's not n+1 backticks
-            if (!isset($text[$closeIdx + $count]) || $text[$closeIdx + $count] !== '`') {
-                $code = substr($text, $contentStart, $closeIdx - $contentStart);
-                // Strip one leading/trailing space if count > 1 and both present
-                if ($count > 1 && str_starts_with($code, ' ') && str_ends_with($code, ' ')) {
-                    $code = substr($code, 1, -1);
-                }
-                
-                return ['node' => new CodeSpanNode($code), 'end' => $closeIdx + $count];
-            }
-            $searchPos = $closeIdx + 1;
-        }
-        return null;
+        return self::$matchers;
     }
-
-    /**
-     * Image: ![alt](url "title" =WxH)
-     * @return array{node: InlineNode, end: int}|null
-     */
-    private static function tryMatchImage(string $text, int $pos, ParseContext $ctx): ?array {
-        if (!isset($text[$pos+1]) || $text[$pos] !== '!' || $text[$pos + 1] !== '[') return null;
-
-        $altEnd = self::findClosingBracket($text, $pos + 2);
-        if ($altEnd === -1) return null;
-
-        if (!isset($text[$altEnd + 1]) || $text[$altEnd + 1] !== '(') return null;
-
-        $urlEnd = self::findClosingParen($text, $altEnd + 2);
-        if ($urlEnd === -1) return null;
-
-        $alt = substr($text, $pos + 2, $altEnd - ($pos + 2));
-        $urlContent = substr($text, $altEnd + 2, $urlEnd - ($altEnd + 2));
-        $parsed = self::parseImageContent($urlContent);
-
-        $node = new ImageNode($alt, $parsed['href'], $parsed['title'], $parsed['width'], $parsed['height']);
-        return ['node' => $node, 'end' => $urlEnd + 1];
-    }
-
-    /**
-     * Inline footnote: ^[text]
-     * @return array{node: InlineNode, end: int}|null
-     */
-    private static function tryMatchInlineFootnote(string $text, int $pos, ParseContext $ctx): ?array {
-        if (!isset($text[$pos+1]) || $text[$pos] !== '^' || $text[$pos + 1] !== '[') return null;
-
-        $end = self::findClosingBracket($text, $pos + 2);
-        if ($end === -1) return null;
-
-        $content = substr($text, $pos + 2, $end - ($pos + 2));
-        $ctx->inlineFootnoteCount++;
-        $id = "__inline_" . $ctx->inlineFootnoteCount;
-        $ctx->footnoteRefs[] = $id;
-        
-        $children = self::parseInline($content, $ctx);
-        $ctx->footnoteDefs[$id] = $children;
-
-        $node = new InlineFootnoteNode($children);
-        return ['node' => $node, 'end' => $end + 1];
-    }
-
-    /**
-     * Footnote reference: [^id]
-     * @return array{node: InlineNode, end: int}|null
-     */
-    private static function tryMatchFootnoteRef(string $text, int $pos, ParseContext $ctx): ?array {
-        if (!isset($text[$pos+1]) || $text[$pos] !== '[' || $text[$pos + 1] !== '^') return null;
-
-        $end = strpos($text, ']', $pos + 2);
-        if ($end === false) return null;
-        
-        $id = substr($text, $pos + 2, $end - ($pos + 2));
-        if (str_contains($id, ' ')) return null;
-
-        if (!in_array($id, $ctx->footnoteRefs, true)) {
-            $ctx->footnoteRefs[] = $id;
-        }
-
-        $node = new FootnoteRefNode($id);
-        return ['node' => $node, 'end' => $end + 1];
-    }
-
-    /**
-     * Warp reference: [~id]
-     * @return array{node: InlineNode, end: int}|null
-     */
-    private static function tryMatchWarpRef(string $text, int $pos): ?array {
-        if (!isset($text[$pos+1]) || $text[$pos] !== '[' || $text[$pos + 1] !== '~') return null;
-
-        $end = strpos($text, ']', $pos + 2);
-        if ($end === false) return null;
-        
-        $id = substr($text, $pos + 2, $end - ($pos + 2));
-        if ($id === '' || str_contains($id, ' ')) return null;
-
-        $node = new WarpRefNode($id);
-        return ['node' => $node, 'end' => $end + 1];
-    }
-
-    /**
-     * Link or inline link starting with [
-     * @return array{node: InlineNode, end: int}|null
-     */
-    private static function tryMatchBracketExpression(string $text, int $pos, ParseContext $ctx): ?array {
-        if (!isset($text[$pos]) || $text[$pos] !== '[') return null;
-
-        if (isset($text[$pos + 1])) {
-            if ($text[$pos + 1] === '^') return self::tryMatchFootnoteRef($text, $pos, $ctx);
-            if ($text[$pos + 1] === '~') return self::tryMatchWarpRef($text, $pos);
-        }
-
-        $textEnd = self::findClosingBracket($text, $pos + 1);
-        if ($textEnd === -1) return null;
-
-        $linkText = substr($text, $pos + 1, $textEnd - ($pos + 1));
-        $afterBracket = $textEnd + 1;
-
-        return self::tryMatchInlineLink($text, $afterBracket, $linkText, $ctx)
-            ?? self::tryMatchReferenceLink($text, $afterBracket, $linkText, $ctx);
-    }
-
-    private static function tryMatchInlineLink(string $text, int $afterBracket, string $linkText, ParseContext $ctx): ?array {
-        if (isset($text[$afterBracket]) && $text[$afterBracket] === '(') {
-            $urlEnd = self::findClosingParen($text, $afterBracket + 1);
-            if ($urlEnd !== -1) {
-                $urlContent = substr($text, $afterBracket + 1, $urlEnd - ($afterBracket + 1));
-                $parsedUrl = self::parseLinkContent($urlContent);
-                $node = new InlineLinkNode(
-                    self::parseInline($linkText, $ctx),
-                    $parsedUrl['href'],
-                    $parsedUrl['title']
-                );
-                return ['node' => $node, 'end' => $urlEnd + 1];
-            }
-        }
-        return null;
-    }
-
-    private static function tryMatchReferenceLink(string $text, int $afterBracket, string $linkText, ParseContext $ctx): ?array {
-        // Reference link: [text][id]
-        if (isset($text[$afterBracket]) && $text[$afterBracket] === '[') {
-            $idEnd = strpos($text, ']', $afterBracket + 1);
-            if ($idEnd !== false) {
-                $rawId = substr($text, $afterBracket + 1, $idEnd - ($afterBracket + 1));
-                $id = strtolower(trim($rawId) !== '' ? trim($rawId) : trim($linkText));
-                if (isset($ctx->linkDefs[$id])) {
-                    $def = $ctx->linkDefs[$id];
-                    $node = new LinkNode(
-                        self::parseInline($linkText, $ctx),
-                        $def->href,
-                        $def->title
-                    );
-                    return ['node' => $node, 'end' => $idEnd + 1];
-                }
-            }
-        }
-
-        // Implicit shortcut: [text][]
-        if (isset($text[$afterBracket]) && $text[$afterBracket] === '[' && isset($text[$afterBracket+1]) && $text[$afterBracket + 1] === ']') {
-            $id = strtolower(trim($linkText));
-            if (isset($ctx->linkDefs[$id])) {
-                $def = $ctx->linkDefs[$id];
-                $node = new LinkNode(
-                    self::parseInline($linkText, $ctx),
-                    $def->href,
-                    $def->title
-                );
-                return ['node' => $node, 'end' => $afterBracket + 2];
-            }
-        }
-
-        // Implicit link (no bracket after): [text] if id matches
-        $implicitId = strtolower(trim($linkText));
-        if (isset($ctx->linkDefs[$implicitId])) {
-            $implicitDef = $ctx->linkDefs[$implicitId];
-            $node = new LinkNode(
-                self::parseInline($linkText, $ctx),
-                $implicitDef->href,
-                $implicitDef->title
-            );
-            return ['node' => $node, 'end' => $afterBracket];
-        }
-
-        return null;
-    }
-
-    /**
-     * Strong: **text** or __text__
-     * @return array{node: InlineNode, end: int}|null
-     */
-    private static function tryMatchStrong(string $text, int $pos, ParseContext $ctx): ?array {
-        $ch = $text[$pos];
-        if (($ch !== '*' && $ch !== '_') || !isset($text[$pos + 1]) || $text[$pos + 1] !== $ch) {
-            return null;
-        }
-        // Don't consume *** (triple) - let the outer loop emit one literal char
-        if (isset($text[$pos + 2]) && $text[$pos + 2] === $ch) {
-            return null;
-        }
-
-        $delim = $ch . $ch;
-        $contentStart = $pos + 2;
-
-        $closeIdx = strpos($text, $delim, $contentStart);
-        if ($closeIdx === false) return null;
-
-        // Content cannot span newlines
-        $content = substr($text, $contentStart, $closeIdx - $contentStart);
-        if (str_contains($content, "\n")) return null;
-
-        $node = new StrongNode(self::parseInline($content, $ctx));
-        return ['node' => $node, 'end' => $closeIdx + 2];
-    }
-
-    /**
-     * Emphasis: *text* or _text_
-     * @return array{node: InlineNode, end: int}|null
-     */
-    private static function tryMatchEmphasis(string $text, int $pos, ParseContext $ctx): ?array {
-        $ch = $text[$pos];
-        if ($ch !== '*' && $ch !== '_') return null;
-        // Must be single (not **)
-        if (isset($text[$pos + 1]) && $text[$pos + 1] === $ch) return null;
-
-        $contentStart = $pos + 1;
-        $searchPos = $contentStart;
-        $len = strlen($text);
-
-        while ($searchPos < $len) {
-            $closeIdx = strpos($text, $ch, $searchPos);
-            if ($closeIdx === false) return null;
-
-            // Skip double occurrences
-            if (isset($text[$closeIdx + 1]) && $text[$closeIdx + 1] === $ch) {
-                $searchPos = $closeIdx + 2;
-                continue;
-            }
-
-            $content = substr($text, $contentStart, $closeIdx - $contentStart);
-            if (str_contains($content, "\n")) return null;
-
-            $node = new EmphasisNode(self::parseInline($content, $ctx));
-            return ['node' => $node, 'end' => $closeIdx + 1];
-        }
-        return null;
-    }
-
-    private static function tryMatchStrikethrough(string $text, int $pos, ParseContext $ctx): ?array {
-        if (!isset($text[$pos+1]) || $text[$pos] !== '~' || $text[$pos + 1] !== '~') return null;
-
-        // 余剰な ~ をすべてカウントして飲み込む
-        $startTildes = 0;
-        $tempPos = $pos;
-        while (isset($text[$tempPos]) && $text[$tempPos] === '~') {
-            $startTildes++;
-            $tempPos++;
-        }
-
-        $contentStart = $tempPos;
-        $searchPos = $contentStart;
-        $len = strlen($text);
-
-        while ($searchPos < $len) {
-            $closeIdx = strpos($text, '~~', $searchPos);
-            if ($closeIdx === false) return null;
-
-            $endTildes = 0;
-            $tempEnd = $closeIdx;
-            while (isset($text[$tempEnd]) && $text[$tempEnd] === '~') {
-                $endTildes++;
-                $tempEnd++;
-            }
-
-            if ($endTildes >= 2) {
-                $content = substr($text, $contentStart, $closeIdx - $contentStart);
-                if (str_contains($content, "\n")) return null;
-
-                $node = new StrikethroughNode(self::parseInline($content, $ctx));
-                // 終端にある余剰な ~ もすべて飲み込んで終了位置をセット
-                return ['node' => $node, 'end' => $tempEnd];
-            }
-            $searchPos = $closeIdx + 2;
-        }
-
-        return null;
-    }
-
-    // ============================================================
-    // Main inline parser
-    // ============================================================
 
     /**
      * @return InlineNode[]
@@ -470,23 +175,12 @@ class InlineParser {
     }
 
     private static function tryMatchAny(string $text, int $pos, ParseContext $ctx): ?array {
-        $ch = $text[$pos];
-
-        if ($ch === '`') return self::tryMatchCodeSpan($text, $pos);
-        if ($ch === '!' && isset($text[$pos + 1]) && $text[$pos + 1] === '[') return self::tryMatchImage($text, $pos, $ctx);
-        if ($ch === '^' && isset($text[$pos + 1]) && $text[$pos + 1] === '[') return self::tryMatchInlineFootnote($text, $pos, $ctx);
-        if ($ch === '[') return self::tryMatchBracketExpression($text, $pos, $ctx);
-        if ($ch === '~' && isset($text[$pos + 1]) && $text[$pos + 1] === '~') return self::tryMatchStrikethrough($text, $pos, $ctx);
-
-        if ($ch === '*' || $ch === '_') {
-            if (isset($text[$pos + 1]) && $text[$pos + 1] === $ch && (!isset($text[$pos + 2]) || $text[$pos + 2] !== $ch)) {
-                return self::tryMatchStrong($text, $pos, $ctx);
-            }
-            if (!isset($text[$pos + 1]) || $text[$pos + 1] !== $ch) {
-                return self::tryMatchEmphasis($text, $pos, $ctx);
+        foreach (self::getMatchers() as $matcher) {
+            $result = $matcher->tryMatch($text, $pos, $ctx);
+            if ($result !== null) {
+                return $result;
             }
         }
-
         return null;
     }
 }
