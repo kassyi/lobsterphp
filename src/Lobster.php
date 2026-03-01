@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace Kassyi\LobsterPhp;
 
-use Kassyi\LobsterPhp\Core\BlockParser;
-use Kassyi\LobsterPhp\Core\Document;
-use Kassyi\LobsterPhp\Renderer\HtmlRenderer;
-use Kassyi\LobsterPhp\Renderer\RenderedParts;
+use Kassyi\LobsterPhp\Core\{BlockParser, Document};
+use Kassyi\LobsterPhp\Renderer\{HtmlRenderer, RenderedParts};
 
 class Lobster {
     /**
