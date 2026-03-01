@@ -242,7 +242,11 @@ class InlineParser {
         $linkText = substr($text, $pos + 1, $textEnd - ($pos + 1));
         $afterBracket = $textEnd + 1;
 
-        // Inline link: [text](url)
+        return self::tryMatchInlineLink($text, $afterBracket, $linkText, $ctx)
+            ?? self::tryMatchReferenceLink($text, $afterBracket, $linkText, $ctx);
+    }
+
+    private static function tryMatchInlineLink(string $text, int $afterBracket, string $linkText, ParseContext $ctx): ?array {
         if (isset($text[$afterBracket]) && $text[$afterBracket] === '(') {
             $urlEnd = self::findClosingParen($text, $afterBracket + 1);
             if ($urlEnd !== -1) {
@@ -256,7 +260,10 @@ class InlineParser {
                 return ['node' => $node, 'end' => $urlEnd + 1];
             }
         }
+        return null;
+    }
 
+    private static function tryMatchReferenceLink(string $text, int $afterBracket, string $linkText, ParseContext $ctx): ?array {
         // Reference link: [text][id]
         if (isset($text[$afterBracket]) && $text[$afterBracket] === '[') {
             $idEnd = strpos($text, ']', $afterBracket + 1);
@@ -365,24 +372,44 @@ class InlineParser {
         return null;
     }
 
-    /**
-     * Strikethrough: ~~text~~
-     * @return array{node: InlineNode, end: int}|null
-     */
     private static function tryMatchStrikethrough(string $text, int $pos, ParseContext $ctx): ?array {
         if (!isset($text[$pos+1]) || $text[$pos] !== '~' || $text[$pos + 1] !== '~') return null;
-        // Reject ~~~
-        if (isset($text[$pos + 2]) && $text[$pos + 2] === '~') return null;
 
-        $contentStart = $pos + 2;
-        $closeIdx = strpos($text, '~~', $contentStart);
-        if ($closeIdx === false) return null;
+        // 余剰な ~ をすべてカウントして飲み込む
+        $startTildes = 0;
+        $tempPos = $pos;
+        while (isset($text[$tempPos]) && $text[$tempPos] === '~') {
+            $startTildes++;
+            $tempPos++;
+        }
 
-        $content = substr($text, $contentStart, $closeIdx - $contentStart);
-        if (str_contains($content, "\n")) return null;
+        $contentStart = $tempPos;
+        $searchPos = $contentStart;
+        $len = strlen($text);
 
-        $node = new StrikethroughNode(self::parseInline($content, $ctx));
-        return ['node' => $node, 'end' => $closeIdx + 2];
+        while ($searchPos < $len) {
+            $closeIdx = strpos($text, '~~', $searchPos);
+            if ($closeIdx === false) return null;
+
+            $endTildes = 0;
+            $tempEnd = $closeIdx;
+            while (isset($text[$tempEnd]) && $text[$tempEnd] === '~') {
+                $endTildes++;
+                $tempEnd++;
+            }
+
+            if ($endTildes >= 2) {
+                $content = substr($text, $contentStart, $closeIdx - $contentStart);
+                if (str_contains($content, "\n")) return null;
+
+                $node = new StrikethroughNode(self::parseInline($content, $ctx));
+                // 終端にある余剰な ~ もすべて飲み込んで終了位置をセット
+                return ['node' => $node, 'end' => $tempEnd];
+            }
+            $searchPos = $closeIdx + 2;
+        }
+
+        return null;
     }
 
     // ============================================================
@@ -407,40 +434,17 @@ class InlineParser {
 
         while ($pos < $len) {
             $ch = $text[$pos];
-            $result = null;
 
-            if ($ch === '`') {
-                $result = self::tryMatchCodeSpan($text, $pos);
-            } elseif ($ch === '!' && isset($text[$pos + 1]) && $text[$pos + 1] === '[') {
-                $result = self::tryMatchImage($text, $pos, $ctx);
-            } elseif ($ch === '^' && isset($text[$pos + 1]) && $text[$pos + 1] === '[') {
-                $result = self::tryMatchInlineFootnote($text, $pos, $ctx);
-            } elseif ($ch === '[') {
-                $result = self::tryMatchBracketExpression($text, $pos, $ctx);
-            } elseif (
-                ($ch === '*' || $ch === '_') &&
-                isset($text[$pos + 1]) && $text[$pos + 1] === $ch &&
-                (!isset($text[$pos + 2]) || $text[$pos + 2] !== $ch)
-            ) {
-                // Potential strong (**/**)
-                $result = self::tryMatchStrong($text, $pos, $ctx);
-            } elseif (
-                ($ch === '*' || $ch === '_') &&
-                (!isset($text[$pos + 1]) || $text[$pos + 1] !== $ch)
-            ) {
-                // Potential emphasis
-                $result = self::tryMatchEmphasis($text, $pos, $ctx);
-            } elseif ($ch === '~' && isset($text[$pos + 1]) && $text[$pos + 1] === '~' && (!isset($text[$pos + 2]) || $text[$pos + 2] !== '~')) {
-                $result = self::tryMatchStrikethrough($text, $pos, $ctx);
-            } elseif ($ch === "\n") {
+            if ($ch === "\n") {
                 $flushText();
                 $nodes[] = new LineBreakNode();
                 $pos++;
                 $textStart = $pos;
                 continue;
             }
+
             // Triple star/underscore: emit one literal char and let the next iteration handle **
-            elseif (
+            if (
                 ($ch === '*' || $ch === '_') &&
                 isset($text[$pos + 1]) && $text[$pos + 1] === $ch &&
                 isset($text[$pos + 2]) && $text[$pos + 2] === $ch
@@ -448,6 +452,8 @@ class InlineParser {
                 $pos++;
                 continue;
             }
+
+            $result = self::tryMatchAny($text, $pos, $ctx);
 
             if ($result !== null) {
                 $flushText();
@@ -461,5 +467,26 @@ class InlineParser {
 
         $flushText();
         return $nodes;
+    }
+
+    private static function tryMatchAny(string $text, int $pos, ParseContext $ctx): ?array {
+        $ch = $text[$pos];
+
+        if ($ch === '`') return self::tryMatchCodeSpan($text, $pos);
+        if ($ch === '!' && isset($text[$pos + 1]) && $text[$pos + 1] === '[') return self::tryMatchImage($text, $pos, $ctx);
+        if ($ch === '^' && isset($text[$pos + 1]) && $text[$pos + 1] === '[') return self::tryMatchInlineFootnote($text, $pos, $ctx);
+        if ($ch === '[') return self::tryMatchBracketExpression($text, $pos, $ctx);
+        if ($ch === '~' && isset($text[$pos + 1]) && $text[$pos + 1] === '~') return self::tryMatchStrikethrough($text, $pos, $ctx);
+
+        if ($ch === '*' || $ch === '_') {
+            if (isset($text[$pos + 1]) && $text[$pos + 1] === $ch && (!isset($text[$pos + 2]) || $text[$pos + 2] !== $ch)) {
+                return self::tryMatchStrong($text, $pos, $ctx);
+            }
+            if (!isset($text[$pos + 1]) || $text[$pos + 1] !== $ch) {
+                return self::tryMatchEmphasis($text, $pos, $ctx);
+            }
+        }
+
+        return null;
     }
 }
