@@ -89,7 +89,7 @@ class InlineParser {
             if ($sizeMatch[2][0] !== '') {
                 $height = (int)$sizeMatch[2][0];
             }
-            $content = trim(substr($content, 0, $sizeMatch[0][1]));
+            $content = trim(substr($content, 0, (int)$sizeMatch[0][1]));
         }
         
         $linkContent = self::parseLinkContent($content);
