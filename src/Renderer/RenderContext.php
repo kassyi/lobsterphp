@@ -6,12 +6,21 @@ namespace Kassyi\LobsterPhp\Renderer;
 
 use Kassyi\LobsterPhp\Core\{InlineNode, WarpDefinitionNode};
 
+/**
+
+ * RenderContext
+
+ */
+
 class RenderContext {
     /**
      * @param string[] $footnoteRefs
      * @param array<string, int> $footnoteRefCount
      * @param array<string, InlineNode[]> $footnoteDefs
      * @param array<string, WarpDefinitionNode> $warpDefs
+     */
+    /**
+     * __construct
      */
     public function __construct(
         public array $footnoteRefs,
@@ -20,3 +29,4 @@ class RenderContext {
         public array $warpDefs
     ) {}
 }
+

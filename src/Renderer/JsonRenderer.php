@@ -18,11 +18,23 @@ use Kassyi\LobsterPhp\Renderer\RenderContext;
  *   $json = JsonRenderer::render($markdown);  // returns JSON string
  *   $array = JsonRenderer::renderDocument(BlockParser::parseDocument($md));
  */
+/**
+ * JsonRenderer
+ */
 class JsonRenderer {
+    /**
+     * render
+     */
     public static function render(string $markdown, int $flags = JSON_UNESCAPED_UNICODE): string {
         $doc = BlockParser::parseDocument($markdown);
         return json_encode(self::renderDocument($doc), $flags | JSON_THROW_ON_ERROR);
     }
+
+    /**
+
+     * renderDocument
+
+     */
 
     public static function renderDocument(Document $doc): array {
         $ctx = new RenderContext(
@@ -65,3 +77,4 @@ class JsonRenderer {
         ], fn($v) => $v !== null);
     }
 }
+

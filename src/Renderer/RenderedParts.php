@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace Kassyi\LobsterPhp\Renderer;
 
+/**
+
+ * RenderedParts
+
+ */
+
 class RenderedParts {
     /**
      * @param string $header
@@ -12,6 +18,9 @@ class RenderedParts {
      * @param string $footnotes
      * @param array<string, string> $warps
      * @param string $full
+     */
+    /**
+     * __construct
      */
     public function __construct(
         public readonly string $header,
@@ -22,3 +31,4 @@ class RenderedParts {
         public readonly string $full
     ) {}
 }
+
