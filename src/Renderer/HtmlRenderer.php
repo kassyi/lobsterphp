@@ -6,11 +6,20 @@ namespace Kassyi\LobsterPhp\Renderer;
 
 use Kassyi\LobsterPhp\Core\Document;
 
+/**
+ * HTML Renderer
+ */
 class HtmlRenderer {
     // ============================================================
     // Public renderer
     // ============================================================
 
+    /**
+     * Renders a Document AST into separate HTML parts.
+     *
+     * @param Document $doc The parsed AST document.
+     * @return RenderedParts Rendered header, body, footer, etc.
+     */
     public static function renderDocumentParts(Document $doc): RenderedParts {
         $ctx = new RenderContext(
             $doc->footnoteRefs,
@@ -47,6 +56,12 @@ class HtmlRenderer {
         );
     }
 
+    /**
+     * Renders a Document AST strictly into a single full HTML string.
+     *
+     * @param Document $doc The parsed AST document.
+     * @return string The combined HTML string.
+     */
     public static function renderDocument(Document $doc): string {
         return self::renderDocumentParts($doc)->full;
     }
@@ -55,6 +70,13 @@ class HtmlRenderer {
     // Footnote section (document-level aggregation)
     // ============================================================
 
+    /**
+     * Renders aggregated footnotes at the end of the document.
+     *
+     * @param RenderContext $ctx Processing context containing footnote definitions.
+     * @param HtmlRendererVisitor $visitor Visitor instance to process inline formatting inside footnotes.
+     * @return string Rendered footer HTML.
+     */
     private static function renderFootnotes(RenderContext $ctx, HtmlRendererVisitor $visitor): string {
         if (empty($ctx->footnoteRefs)) return '';
 

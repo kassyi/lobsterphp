@@ -10,7 +10,14 @@ use Kassyi\LobsterPhp\Core\{BlockquoteNode, BulletListNode, CodeBlockNode, CodeS
     ParagraphNode, StrikethroughNode, StrongNode, TableAlignment, TableNode, TextNode, WarpDefinitionNode, WarpRefNode};
 use Kassyi\LobsterPhp\Core\Visitor\NodeVisitorInterface;
 
+/**
+ * HtmlRendererVisitor
+ */
+
 class HtmlRendererVisitor implements NodeVisitorInterface {
+    /**
+     * __construct
+     */
     public function __construct(
         private RenderContext $ctx
     ) {}
@@ -19,6 +26,9 @@ class HtmlRendererVisitor implements NodeVisitorInterface {
         return htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     }
 
+    /**
+     * renderBlockNodes
+     */
     public function renderBlockNodes(array $nodes): string {
         $out = [];
         foreach ($nodes as $n) {
@@ -28,6 +38,9 @@ class HtmlRendererVisitor implements NodeVisitorInterface {
         return implode("\n", $out);
     }
 
+    /**
+     * renderInlineNodes
+     */
     public function renderInlineNodes(array $nodes): string {
         $result = '';
         foreach ($nodes as $node) {
@@ -40,40 +53,67 @@ class HtmlRendererVisitor implements NodeVisitorInterface {
     // Inline Nodes
     // ============================================================
 
+    /**
+     * {@inheritDoc}
+     */
     public function visitTextNode(TextNode $node): mixed {
         return $this->escapeHtml($node->text);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function visitLineBreakNode(LineBreakNode $node): mixed {
         return '<br>';
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function visitEmphasisNode(EmphasisNode $node): mixed {
         return '<span class="lbs-emphasis">' . $this->renderInlineNodes($node->children) . '</span>';
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function visitStrongNode(StrongNode $node): mixed {
         return '<span class="lbs-strong">' . $this->renderInlineNodes($node->children) . '</span>';
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function visitStrikethroughNode(StrikethroughNode $node): mixed {
         return '<span class="lbs-strikethrough">' . $this->renderInlineNodes($node->children) . '</span>';
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function visitCodeSpanNode(CodeSpanNode $node): mixed {
         return '<code class="lbs-code-span">' . $this->escapeHtml($node->code) . '</code>';
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function visitInlineLinkNode(InlineLinkNode $node): mixed {
         $title = $node->title !== null ? ' title="' . $this->escapeHtml($node->title) . '"' : '';
         return '<a href="' . $this->escapeHtml($node->href) . '"' . $title . '>' . $this->renderInlineNodes($node->text) . '</a>';
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function visitLinkNode(LinkNode $node): mixed {
         $title = $node->title !== null ? ' title="' . $this->escapeHtml($node->title) . '"' : '';
         return '<a href="' . $this->escapeHtml($node->href) . '"' . $title . '>' . $this->renderInlineNodes($node->text) . '</a>';
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function visitImageNode(ImageNode $node): mixed {
         $title = $node->title !== null ? ' title="' . $this->escapeHtml($node->title) . '"' : '';
         $width = $node->width !== null ? ' width="' . $node->width . '"' : '';
@@ -81,6 +121,9 @@ class HtmlRendererVisitor implements NodeVisitorInterface {
         return '<img src="' . $this->escapeHtml($node->src) . '" alt="' . $this->escapeHtml($node->alt) . '"' . $title . $width . $height . ' class="lbs-image">';
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function visitFootnoteRefNode(FootnoteRefNode $node): mixed {
         $idx = array_search($node->id, $this->ctx->footnoteRefs, true);
         $num = $idx !== false ? ((int)$idx + 1) : 0;
@@ -93,6 +136,9 @@ class HtmlRendererVisitor implements NodeVisitorInterface {
         return '<sup class="lbs-footnote-ref"><a href="#lbs-fn-' . $this->escapeHtml($node->id) . '" id="lbs-fnref-' . $this->escapeHtml($node->id) . '-' . $refCount . '">' . $label . '</a></sup>';
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function visitInlineFootnoteNode(InlineFootnoteNode $node): mixed {
         $id = null;
         foreach ($this->ctx->footnoteRefs as $ref) {
@@ -109,6 +155,9 @@ class HtmlRendererVisitor implements NodeVisitorInterface {
         return '<sup class="lbs-footnote-ref"><a href="#lbs-fn-' . $this->escapeHtml($id) . '">[' . $num . ']</a></sup>';
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function visitWarpRefNode(WarpRefNode $node): mixed {
         if (!isset($this->ctx->warpDefs[$node->id])) return '';
         return $this->renderBlockNodes($this->ctx->warpDefs[$node->id]->children);
@@ -118,20 +167,32 @@ class HtmlRendererVisitor implements NodeVisitorInterface {
     // Block Nodes
     // ============================================================
 
+    /**
+     * {@inheritDoc}
+     */
     public function visitHeadingNode(HeadingNode $node): mixed {
         $content = $this->renderInlineNodes($node->children);
         $idAttr = $node->id !== null ? ' id="' . $this->escapeHtml($node->id) . '"' : '';
         return '<h' . $node->level . ' class="lbs-heading-' . $node->level . '"' . $idAttr . '>' . $content . '</h' . $node->level . '>';
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function visitParagraphNode(ParagraphNode $node): mixed {
         return '<p class="lbs-paragraph">' . $this->renderInlineNodes($node->children) . '</p>';
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function visitHorizontalRuleNode(HorizontalRuleNode $node): mixed {
         return '<hr class="lbs-hr">';
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function visitCodeBlockNode(CodeBlockNode $node): mixed {
         $langAttr = $node->language !== null ? ' data-language="' . $this->escapeHtml($node->language) . '"' : '';
         $filenameAttr = $node->filename !== null ? ' data-filename="' . $this->escapeHtml($node->filename) . '"' : '';
@@ -140,10 +201,16 @@ class HtmlRendererVisitor implements NodeVisitorInterface {
         return '<div class="lbs-code-block">' . $header . '<pre' . $langAttr . $filenameAttr . '><code' . $langClass . '>' . $this->escapeHtml($node->code) . '</code></pre></div>';
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function visitBlockquoteNode(BlockquoteNode $node): mixed {
         return '<blockquote class="lbs-blockquote">' . $this->renderBlockNodes($node->children) . '</blockquote>';
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function visitBulletListNode(BulletListNode $node): mixed {
         $items = [];
         foreach ($node->items as $item) {
@@ -152,6 +219,9 @@ class HtmlRendererVisitor implements NodeVisitorInterface {
         return '<ul class="lbs-ul lbs-ul-depth-' . $node->depth . "\">\n" . implode("\n", $items) . "\n</ul>";
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function visitOrderedListNode(OrderedListNode $node): mixed {
         $startAttr = $node->start !== 1 ? ' start="' . $node->start . '"' : '';
         $items = [];
@@ -161,6 +231,9 @@ class HtmlRendererVisitor implements NodeVisitorInterface {
         return '<ol class="lbs-ol lbs-ol-depth-' . $node->depth . '"' . $startAttr . ">\n" . implode("\n", $items) . "\n</ol>";
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function visitListItemNode(ListItemNode $node): mixed {
         $content = $this->renderInlineNodes($node->children);
 
@@ -181,6 +254,9 @@ class HtmlRendererVisitor implements NodeVisitorInterface {
         return '<li class="' . $liClass . '">' . $content . '</li>';
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function visitTableNode(TableNode $node): mixed {
         $tableClass = $node->isSilent ? 'lbs-table lbs-table-silent' : 'lbs-table';
         $headerCells = $this->renderTableHeaders($node);
@@ -222,19 +298,33 @@ class HtmlRendererVisitor implements NodeVisitorInterface {
         return $bodyRows;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function visitHeaderContainerNode(HeaderContainerNode $node): mixed {
         return '<header class="lbs-header">' . $this->renderBlockNodes($node->children) . '</header>';
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function visitFooterContainerNode(FooterContainerNode $node): mixed {
         return '<footer class="lbs-footer">' . $this->renderBlockNodes($node->children) . '</footer>';
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function visitDetailsNode(DetailsNode $node): mixed {
         return '<details class="lbs-details">' . "\n" . '<summary class="lbs-summary">' . $this->escapeHtml($node->title) . "</summary>\n" . $this->renderBlockNodes($node->children) . "\n</details>";
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function visitWarpDefinitionNode(WarpDefinitionNode $node): mixed {
         return '';
     }
 }
+
+

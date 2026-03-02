@@ -42,31 +42,45 @@ class JsonRendererVisitor implements NodeVisitorInterface {
     }
 
     // ── Inline Nodes ──────────────────────────────────────────────────────────
-
+    /**
+     * {@inheritDoc}
+     */
     public function visitTextNode(TextNode $node): mixed {
         return ['type' => 'text', 'value' => $node->text];
     }
-
+    /**
+     * {@inheritDoc}
+     */
     public function visitLineBreakNode(LineBreakNode $node): mixed {
         return ['type' => 'lineBreak'];
     }
-
+    /**
+     * {@inheritDoc}
+     */
     public function visitEmphasisNode(EmphasisNode $node): mixed {
         return ['type' => 'emphasis', 'children' => $this->renderNodes($node->children)];
     }
-
+    /**
+     * {@inheritDoc}
+     */
     public function visitStrongNode(StrongNode $node): mixed {
         return ['type' => 'strong', 'children' => $this->renderNodes($node->children)];
     }
-
+    /**
+     * {@inheritDoc}
+     */
     public function visitStrikethroughNode(StrikethroughNode $node): mixed {
         return ['type' => 'strikethrough', 'children' => $this->renderNodes($node->children)];
     }
-
+    /**
+     * {@inheritDoc}
+     */
     public function visitCodeSpanNode(CodeSpanNode $node): mixed {
         return ['type' => 'codeSpan', 'value' => $node->code];
     }
-
+    /**
+     * {@inheritDoc}
+     */
     public function visitInlineLinkNode(InlineLinkNode $node): mixed {
         return [
             'type' => 'link',
@@ -75,7 +89,9 @@ class JsonRendererVisitor implements NodeVisitorInterface {
             'children' => $this->renderNodes($node->text),
         ];
     }
-
+    /**
+     * {@inheritDoc}
+     */
     public function visitLinkNode(LinkNode $node): mixed {
         return [
             'type' => 'link',
@@ -84,7 +100,9 @@ class JsonRendererVisitor implements NodeVisitorInterface {
             'children' => $this->renderNodes($node->text),
         ];
     }
-
+    /**
+     * {@inheritDoc}
+     */
     public function visitImageNode(ImageNode $node): mixed {
         return [
             'type' => 'image',
@@ -95,17 +113,23 @@ class JsonRendererVisitor implements NodeVisitorInterface {
             'height' => $node->height,
         ];
     }
-
+    /**
+     * {@inheritDoc}
+     */
     public function visitFootnoteRefNode(FootnoteRefNode $node): mixed {
         $idx = array_search($node->id, $this->ctx->footnoteRefs, true);
         $num = $idx !== false ? ((int)$idx + 1) : 0;
         return ['type' => 'footnoteRef', 'id' => $node->id, 'num' => $num];
     }
-
+    /**
+     * {@inheritDoc}
+     */
     public function visitInlineFootnoteNode(InlineFootnoteNode $node): mixed {
         return ['type' => 'inlineFootnote', 'children' => $this->renderNodes($node->children)];
     }
-
+    /**
+     * {@inheritDoc}
+     */
     public function visitWarpRefNode(WarpRefNode $node): mixed {
         if (!isset($this->ctx->warpDefs[$node->id])) return null;
         return [
@@ -116,7 +140,9 @@ class JsonRendererVisitor implements NodeVisitorInterface {
     }
 
     // ── Block Nodes ───────────────────────────────────────────────────────────
-
+    /**
+     * {@inheritDoc}
+     */
     public function visitHeadingNode(HeadingNode $node): mixed {
         return [
             'type' => 'heading',
@@ -125,15 +151,21 @@ class JsonRendererVisitor implements NodeVisitorInterface {
             'children' => $this->renderNodes($node->children),
         ];
     }
-
+    /**
+     * {@inheritDoc}
+     */
     public function visitParagraphNode(ParagraphNode $node): mixed {
         return ['type' => 'paragraph', 'children' => $this->renderNodes($node->children)];
     }
-
+    /**
+     * {@inheritDoc}
+     */
     public function visitHorizontalRuleNode(HorizontalRuleNode $node): mixed {
         return ['type' => 'horizontalRule'];
     }
-
+    /**
+     * {@inheritDoc}
+     */
     public function visitCodeBlockNode(CodeBlockNode $node): mixed {
         return [
             'type' => 'codeBlock',
@@ -142,11 +174,15 @@ class JsonRendererVisitor implements NodeVisitorInterface {
             'value' => $node->code,
         ];
     }
-
+    /**
+     * {@inheritDoc}
+     */
     public function visitBlockquoteNode(BlockquoteNode $node): mixed {
         return ['type' => 'blockquote', 'children' => $this->renderNodes($node->children)];
     }
-
+    /**
+     * {@inheritDoc}
+     */
     public function visitBulletListNode(BulletListNode $node): mixed {
         return [
             'type' => 'list',
@@ -155,7 +191,9 @@ class JsonRendererVisitor implements NodeVisitorInterface {
             'items' => array_map(fn($item) => $item->accept($this), $node->items),
         ];
     }
-
+    /**
+     * {@inheritDoc}
+     */
     public function visitOrderedListNode(OrderedListNode $node): mixed {
         return [
             'type' => 'list',
@@ -165,7 +203,9 @@ class JsonRendererVisitor implements NodeVisitorInterface {
             'items' => array_map(fn($item) => $item->accept($this), $node->items),
         ];
     }
-
+    /**
+     * {@inheritDoc}
+     */
     public function visitListItemNode(ListItemNode $node): mixed {
         $result = [
             'type' => 'listItem',
@@ -177,7 +217,9 @@ class JsonRendererVisitor implements NodeVisitorInterface {
         }
         return $result;
     }
-
+    /**
+     * {@inheritDoc}
+     */
     public function visitTableNode(TableNode $node): mixed {
         return [
             'type' => 'table',
@@ -224,15 +266,21 @@ class JsonRendererVisitor implements NodeVisitorInterface {
         }
         return $rows;
     }
-
+    /**
+     * {@inheritDoc}
+     */
     public function visitHeaderContainerNode(HeaderContainerNode $node): mixed {
         return ['type' => 'header', 'children' => $this->renderNodes($node->children)];
     }
-
+    /**
+     * {@inheritDoc}
+     */
     public function visitFooterContainerNode(FooterContainerNode $node): mixed {
         return ['type' => 'footer', 'children' => $this->renderNodes($node->children)];
     }
-
+    /**
+     * {@inheritDoc}
+     */
     public function visitDetailsNode(DetailsNode $node): mixed {
         return [
             'type' => 'details',
@@ -240,9 +288,12 @@ class JsonRendererVisitor implements NodeVisitorInterface {
             'children' => $this->renderNodes($node->children),
         ];
     }
-
+    /**
+     * {@inheritDoc}
+     */
     public function visitWarpDefinitionNode(WarpDefinitionNode $node): mixed {
         // Warp definitions are referenced via WarpRefNode; skip direct output.
         return null;
     }
 }
+
