@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace Kassyi\LobsterPhp\Core;
 
+/**
+
+ * InlineParser
+
+ */
+
 class InlineParser {
     // ============================================================
     // Helpers
@@ -12,6 +18,9 @@ class InlineParser {
     /**
      * Finds the next `]` that closes a `[` opened before `start`.
      * Returns -1 if not found within the same line.
+     */
+    /**
+     * findClosingBracket
      */
     public static function findClosingBracket(string $text, int $start): int {
         $depth = 1;
@@ -36,6 +45,9 @@ class InlineParser {
      * Finds the next `)` that closes a `(` opened before `start`.
      * Returns -1 if not found.
      */
+    /**
+     * findClosingParen
+     */
     public static function findClosingParen(string $text, int $start): int {
         $depth = 1;
         $len = strlen($text);
@@ -57,6 +69,9 @@ class InlineParser {
      * Parses `url "title"`, `url 'title'`, `url (title)`, or just `url`.
      * @return array{href: string, title?: string|null}
      */
+    /**
+     * parseLinkContent
+     */
     public static function parseLinkContent(string $content): array {
         $content = trim($content);
         
@@ -76,6 +91,9 @@ class InlineParser {
     /**
      * Parses `url "title" =WxH` for images.
      * @return array{href: string, title?: string|null, width?: int|null, height?: int|null}
+     */
+    /**
+     * parseImageContent
      */
     public static function parseImageContent(string $content): array {
         $content = trim($content);
@@ -123,6 +141,9 @@ class InlineParser {
 
     /**
      * @return InlineNode[]
+     */
+    /**
+     * parseInline
      */
     public static function parseInline(string $text, ParseContext $ctx): array {
         $nodes = [];
@@ -184,3 +205,4 @@ class InlineParser {
         return null;
     }
 }
+

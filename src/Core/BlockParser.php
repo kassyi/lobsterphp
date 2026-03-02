@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace Kassyi\LobsterPhp\Core;
 
+/**
+
+ * BlockParser
+
+ */
+
 class BlockParser {
     // ============================================================
     // Helpers
@@ -17,16 +23,28 @@ class BlockParser {
         return array_map('rtrim', $lines);
     }
 
+    /**
+
+     * isBlankLine
+
+     */
+
     public static function isBlankLine(string $line): bool {
         return trim($line) === '';
     }
 
     /** Returns true if line is a horizontal rule (---, ***, with optional spaces) */
+    /**
+     * isHorizontalRule
+     */
     public static function isHorizontalRule(string $line): bool {
         return preg_match('/^\s*(-\s*){3,}$/', $line) || preg_match('/^\s*(\*\s*){3,}$/', $line);
     }
 
     /** Returns heading level, content, and optional anchor id, or null */
+    /**
+     * matchHeading
+     */
     public static function matchHeading(string $line): ?array {
         if (!preg_match('/^(#{1,6})\s+(.+?)(\s+#+\s*)?$/', $line, $m)) {
             return null;
@@ -47,6 +65,9 @@ class BlockParser {
     }
 
     /** Returns code fence info (marker + language + filename) or null */
+    /**
+     * matchCodeFence
+     */
     public static function matchCodeFence(string $line): ?array {
         if (!preg_match('/^(`{3,}|~{3,})([\w+-]*)(?::(.+))?/', $line, $m)) {
             return null;
@@ -59,11 +80,17 @@ class BlockParser {
     }
 
     /** Returns the `>` stripped prefix lines for a blockquote block */
+    /**
+     * stripBlockquotePrefix
+     */
     public static function stripBlockquotePrefix(array $lines): array {
         return array_map(fn($l) => preg_replace('/^>\s?/', '', $l), $lines);
     }
 
     /** Returns list item info if line starts a list item */
+    /**
+     * matchListItem
+     */
     public static function matchListItem(string $line): ?array {
         // Bullet list
         if (preg_match('/^(\s*)([-*+])\s+(.*)/', $line, $bulletM)) {
@@ -310,6 +337,9 @@ class BlockParser {
      * @param string[] $lines
      * @return BlockNode[]
      */
+    /**
+     * parseBlocks
+     */
     public static function parseBlocks(array $lines, ParseContext $ctx): array {
         $nodes = [];
         $trimmed = self::trimTrailingSpaces($lines);
@@ -349,6 +379,12 @@ class BlockParser {
 
         return $nodes;
     }
+
+    /**
+
+     * parseDocument
+
+     */
 
     public static function parseDocument(string $markdown): Document {
         // Normalize line endings to \n
@@ -390,3 +426,4 @@ class BlockParser {
         );
     }
 }
+

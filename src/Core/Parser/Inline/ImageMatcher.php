@@ -7,6 +7,12 @@ namespace Kassyi\LobsterPhp\Core\Parser\Inline;
 use Kassyi\LobsterPhp\Core\{ImageNode, InlineNode, InlineParser, ParseContext};
 use Kassyi\LobsterPhp\Core\Parser\InlineMatcherInterface;
 
+/**
+
+ * ImageMatcher
+
+ */
+
 class ImageMatcher implements InlineMatcherInterface {
     /**
      * インライン要素のパースを試みる
@@ -15,6 +21,9 @@ class ImageMatcher implements InlineMatcherInterface {
      * @param int $pos 現在確認中の開始位置（インデックス）
      * @param ParseContext $ctx パースコンテキスト（リンク定義や脚注情報）
      * @return array{node: \Kassyi\LobsterPhp\Core\InlineNode, end: int}|null マッチ成功時は生成されたノードとパース終了位置、失敗時はnull
+     */
+    /**
+     * tryMatch
      */
     public function tryMatch(string $text, int $pos, ParseContext $ctx): ?array {
         if (!isset($text[$pos+1]) || $text[$pos] !== '!' || $text[$pos + 1] !== '[') return null;
@@ -35,3 +44,4 @@ class ImageMatcher implements InlineMatcherInterface {
         return ['node' => $node, 'end' => $urlEnd + 1];
     }
 }
+

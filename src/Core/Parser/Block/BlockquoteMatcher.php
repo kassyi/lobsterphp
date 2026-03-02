@@ -7,6 +7,12 @@ namespace Kassyi\LobsterPhp\Core\Parser\Block;
 use Kassyi\LobsterPhp\Core\{BlockParser, BlockquoteNode, ParseContext};
 use Kassyi\LobsterPhp\Core\Parser\BlockMatcherInterface;
 
+/**
+
+ * BlockquoteMatcher
+
+ */
+
 class BlockquoteMatcher implements BlockMatcherInterface {
     /**
      * ブロック要素のパースを試みる
@@ -15,6 +21,9 @@ class BlockquoteMatcher implements BlockMatcherInterface {
      * @param int $i 現在解析中の行インデックス
      * @param ParseContext $ctx パースコンテキスト（リンク定義や脚注情報）
      * @return array{node: \Kassyi\LobsterPhp\Core\BlockNode, nextIndex: int}|null マッチ成功時は生成されたノードと次の行インデックス、失敗時はnull
+     */
+    /**
+     * tryMatch
      */
     public function tryMatch(array $lines, int $i, ParseContext $ctx): ?array {
         if (!str_starts_with($lines[$i], '>')) return null;
@@ -32,3 +41,4 @@ class BlockquoteMatcher implements BlockMatcherInterface {
         return ['node' => $node, 'nextIndex' => $j];
     }
 }
+
