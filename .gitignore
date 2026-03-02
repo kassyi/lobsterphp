@@ -5,3 +5,4 @@
 .DS_Store
 /php/vendor/
 ai_tmp/
+node_modules/
