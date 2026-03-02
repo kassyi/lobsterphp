@@ -1,0 +1,131 @@
+:root {
+    /* Material Design 3 (M3) Baseline Light Theme Tokens */
+    color-scheme: light;
+
+    /* Primary */
+    --md-sys-color-primary: #6750A4;
+    --md-sys-color-on-primary: #FFFFFF;
+    --md-sys-color-primary-container: #EADDFF;
+    --md-sys-color-on-primary-container: #21005D;
+
+    /* Secondary */
+    --md-sys-color-secondary: #625B71;
+    --md-sys-color-on-secondary: #FFFFFF;
+    --md-sys-color-secondary-container: #E8DEF8;
+    --md-sys-color-on-secondary-container: #1D192B;
+
+    /* Tertiary */
+    --md-sys-color-tertiary: #7D5260;
+    --md-sys-color-on-tertiary: #FFFFFF;
+    --md-sys-color-tertiary-container: #FFD8E4;
+    --md-sys-color-on-tertiary-container: #31111D;
+
+    /* Error */
+    --md-sys-color-error: #B3261E;
+    --md-sys-color-on-error: #FFFFFF;
+    --md-sys-color-error-container: #F9DEDC;
+    --md-sys-color-on-error-container: #410E0B;
+
+    /* Background / Surface */
+    --md-sys-color-background: #FFFBFE;
+    --md-sys-color-on-background: #1C1B1F;
+    --md-sys-color-surface: #FFFBFE;
+    --md-sys-color-on-surface: #1C1B1F;
+    --md-sys-color-surface-variant: #E7E0EC;
+    --md-sys-color-on-surface-variant: #49454F;
+
+    /* Outline */
+    --md-sys-color-outline: #79747E;
+    --md-sys-color-outline-variant: #CAC4D0;
+
+    /* Typography (Inter/Roboto fallback) */
+    --md-sys-typescale-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+    --md-sys-typescale-display-large: 400 57px/64px var(--md-sys-typescale-font-family);
+    --md-sys-typescale-display-medium: 400 45px/52px var(--md-sys-typescale-font-family);
+    --md-sys-typescale-display-small: 400 36px/44px var(--md-sys-typescale-font-family);
+    --md-sys-typescale-headline-large: 400 32px/40px var(--md-sys-typescale-font-family);
+    --md-sys-typescale-headline-medium: 400 28px/36px var(--md-sys-typescale-font-family);
+    --md-sys-typescale-headline-small: 400 24px/32px var(--md-sys-typescale-font-family);
+    --md-sys-typescale-title-large: 400 22px/28px var(--md-sys-typescale-font-family);
+    --md-sys-typescale-title-medium: 500 16px/24px var(--md-sys-typescale-font-family);
+    --md-sys-typescale-title-small: 500 14px/20px var(--md-sys-typescale-font-family);
+    --md-sys-typescale-label-large: 500 14px/20px var(--md-sys-typescale-font-family);
+    --md-sys-typescale-label-medium: 500 12px/16px var(--md-sys-typescale-font-family);
+    --md-sys-typescale-label-small: 500 11px/16px var(--md-sys-typescale-font-family);
+    --md-sys-typescale-body-large: 400 16px/24px var(--md-sys-typescale-font-family);
+    --md-sys-typescale-body-medium: 400 14px/20px var(--md-sys-typescale-font-family);
+    --md-sys-typescale-body-small: 400 12px/16px var(--md-sys-typescale-font-family);
+
+    /* Elevation (Shadows) */
+    --md-sys-elevation-level1: 0px 1px 2px 0px rgba(0, 0, 0, 0.3), 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+    --md-sys-elevation-level2: 0px 1px 2px 0px rgba(0, 0, 0, 0.3), 0px 2px 6px 2px rgba(0, 0, 0, 0.15);
+    --md-sys-elevation-level3: 0px 1px 3px 0px rgba(0, 0, 0, 0.3), 0px 4px 8px 3px rgba(0, 0, 0, 0.15);
+
+    /* Space (Logical mappings) */
+    --space-xs: 0.25rem;
+    /* 4px */
+    --space-sm: 0.5rem;
+    /* 8px */
+    --space-md: 1rem;
+    /* 16px */
+    --space-lg: 1.5rem;
+    /* 24px */
+    --space-xl: 2rem;
+    /* 32px */
+
+    /* Radius */
+    --radius-xs: 4px;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
+    --radius-full: 9999px;
+}
+
+:root[data-theme="dark"],
+[data-theme="dark"] {
+    /* Material Design 3 (M3) Baseline Dark Theme Tokens */
+    color-scheme: dark;
+
+    /* Primary */
+    --md-sys-color-primary: #D0BCFF;
+    --md-sys-color-on-primary: #381E72;
+    --md-sys-color-primary-container: #4F378B;
+    --md-sys-color-on-primary-container: #EADDFF;
+
+    /* Secondary */
+    --md-sys-color-secondary: #CCC2DC;
+    --md-sys-color-on-secondary: #332D41;
+    --md-sys-color-secondary-container: #4A4458;
+    --md-sys-color-on-secondary-container: #E8DEF8;
+
+    /* Tertiary */
+    --md-sys-color-tertiary: #EFB8C8;
+    --md-sys-color-on-tertiary: #492532;
+    --md-sys-color-tertiary-container: #633B48;
+    --md-sys-color-on-tertiary-container: #FFD8E4;
+
+    /* Error */
+    --md-sys-color-error: #F2B8B5;
+    --md-sys-color-on-error: #601410;
+    --md-sys-color-error-container: #8C1D18;
+    --md-sys-color-on-error-container: #F9DEDC;
+
+    /* Background / Surface */
+    --md-sys-color-background: #141218;
+    --md-sys-color-on-background: #E6E1E5;
+    --md-sys-color-surface: #141218;
+    --md-sys-color-on-surface: #E6E1E5;
+    --md-sys-color-surface-variant: #49454F;
+    --md-sys-color-on-surface-variant: #CAC4D0;
+
+    /* Outline */
+    --md-sys-color-outline: #938F99;
+    --md-sys-color-outline-variant: #49454F;
+
+    /* Elevation (Shadows) */
+    --md-sys-elevation-level1: 0px 1px 2px 0px rgba(0, 0, 0, 0.4), 0px 1px 3px 1px rgba(0, 0, 0, 0.2);
+    --md-sys-elevation-level2: 0px 1px 2px 0px rgba(0, 0, 0, 0.4), 0px 2px 6px 2px rgba(0, 0, 0, 0.2);
+    --md-sys-elevation-level3: 0px 1px 3px 0px rgba(0, 0, 0, 0.4), 0px 4px 8px 3px rgba(0, 0, 0, 0.2);
+}

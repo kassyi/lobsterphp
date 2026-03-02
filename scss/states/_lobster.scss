@@ -1,0 +1,87 @@
+@use "../tokens/md3";
+
+@layer states {
+
+    /*
+   * Link Interaction States
+   */
+    .lbs-heading-1,
+    .lbs-heading-2,
+    .lbs-heading-3,
+    .lbs-heading-4,
+    .lbs-heading-5,
+    .lbs-heading-6 {
+
+        /* Anchors injected by lobster.js {#id} extensions */
+        &:target {
+            --heading-color: var(--md-sys-color-primary);
+            animation: highlight 2s ease-out;
+        }
+    }
+
+    a:hover {
+        --link-color: var(--md-sys-color-primary-container);
+        background-color: var(--link-color);
+        color: var(--md-sys-color-on-primary-container);
+        border-radius: var(--radius-sm);
+    }
+
+    /* 
+   * Checkbox Interactions (readonly by default in Markdown, but for completeness)
+   */
+    .lbs-checkbox:focus-visible {
+        outline: 2px solid var(--md-sys-color-primary);
+        outline-offset: 2px;
+    }
+
+    /* 
+   * Details/Summary States using :has()
+   */
+    .lbs-details {
+
+        /* When open, change the border color of the entire details block to primary */
+        &[open] {
+            --details-border: var(--md-sys-color-primary);
+            box-shadow: var(--md-sys-elevation-level1);
+        }
+    }
+
+    .lbs-summary {
+
+        &:hover,
+        &:focus-visible {
+            --summary-bg: var(--md-sys-color-surface-variant);
+            --summary-text: var(--md-sys-color-primary);
+            outline: none;
+        }
+
+        &:focus-visible {
+            border-radius: var(--radius-md);
+            box-shadow: inset 0 0 0 2px var(--md-sys-color-primary);
+        }
+    }
+
+    /*
+   * Table Interactions
+   */
+    .lbs-table {
+        tbody tr:hover {
+            /* Reassigning table text color on row hover for subtle interaction */
+            --table-text: var(--md-sys-color-primary);
+            background-color: var(--md-sys-color-surface-variant);
+        }
+    }
+
+    /* 
+   * Animation definitions
+   */
+    @keyframes highlight {
+        0% {
+            background-color: var(--md-sys-color-tertiary-container);
+        }
+
+        100% {
+            background-color: transparent;
+        }
+    }
+}

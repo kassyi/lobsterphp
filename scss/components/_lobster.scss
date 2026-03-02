@@ -1,0 +1,335 @@
+@use "sass:color";
+
+@layer components {
+
+    /* 
+   * Headings 
+   */
+    :where(.lbs-heading-1),
+    :where(.lbs-heading-2),
+    :where(.lbs-heading-3),
+    :where(.lbs-heading-4),
+    :where(.lbs-heading-5),
+    :where(.lbs-heading-6) {
+        --heading-color: var(--md-sys-color-on-background);
+        color: var(--heading-color);
+        margin-block-start: var(--space-xl);
+        margin-block-end: var(--space-md);
+    }
+
+    :where(.lbs-heading-1) {
+        font: var(--md-sys-typescale-display-small);
+    }
+
+    :where(.lbs-heading-2) {
+        font: var(--md-sys-typescale-headline-large);
+        border-block-end: 1px solid var(--md-sys-color-outline-variant);
+        padding-block-end: var(--space-sm);
+    }
+
+    :where(.lbs-heading-3) {
+        font: var(--md-sys-typescale-headline-medium);
+    }
+
+    :where(.lbs-heading-4) {
+        font: var(--md-sys-typescale-headline-small);
+    }
+
+    :where(.lbs-heading-5) {
+        font: var(--md-sys-typescale-title-large);
+    }
+
+    :where(.lbs-heading-6) {
+        font: var(--md-sys-typescale-title-medium);
+        --heading-color: var(--md-sys-color-outline);
+    }
+
+    /* 
+   * Paragraphs 
+   */
+    :where(.lbs-paragraph) {
+        --p-color: var(--md-sys-color-on-background);
+        color: var(--p-color);
+        margin-block-end: var(--space-md);
+        line-height: 1.6;
+    }
+
+    /* 
+   * Inline Elements 
+   */
+    :where(.lbs-emphasis) {
+        font-style: italic;
+    }
+
+    :where(.lbs-strong) {
+        font-weight: 700;
+    }
+
+    :where(.lbs-strikethrough) {
+        text-decoration: line-through;
+        color: var(--md-sys-color-outline);
+    }
+
+    :where(a) {
+        --link-color: var(--md-sys-color-primary);
+        color: var(--link-color);
+        text-decoration: none;
+        transition: color 0.2s ease;
+    }
+
+    /* 
+   * Code blocks & spans 
+   */
+    :where(.lbs-code-span) {
+        --code-bg: var(--md-sys-color-secondary-container);
+        --code-color: var(--md-sys-color-on-secondary-container);
+
+        background-color: var(--code-bg);
+        color: var(--code-color);
+        font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+        font-size: 0.85em;
+        padding-inline: var(--space-sm);
+        padding-block: 0.15em;
+        border-radius: var(--radius-sm);
+    }
+
+    :where(.lbs-code-block) {
+        --block-bg: var(--md-sys-color-surface-variant);
+        --block-text: var(--md-sys-color-on-surface-variant);
+        --block-radius: var(--radius-md);
+
+        background-color: var(--block-bg);
+        color: var(--block-text);
+        border-radius: var(--block-radius);
+        margin-block-end: var(--space-lg);
+        overflow: hidden;
+
+        &>pre {
+            margin: 0;
+            padding: var(--space-md);
+            overflow-x: auto;
+            font-size: 0.9em;
+            font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+        }
+    }
+
+    :where(.lbs-code-filename) {
+        --filename-bg: var(--md-sys-color-secondary);
+        --filename-color: var(--md-sys-color-on-secondary);
+
+        background-color: var(--filename-bg);
+        color: var(--filename-color);
+        padding-inline: var(--space-md);
+        padding-block: var(--space-sm);
+        font-size: 0.8em;
+        font-family: var(--md-sys-typescale-font-family);
+        border-block-end: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    /* 
+   * Blockquotes 
+   */
+    :where(.lbs-blockquote) {
+        --bq-border: var(--md-sys-color-primary);
+        --bq-bg: var(--md-sys-color-surface-variant);
+        --bq-text: var(--md-sys-color-on-surface-variant);
+
+        margin: 0;
+        margin-block-end: var(--space-lg);
+        padding-block: var(--space-md);
+        padding-inline: var(--space-lg);
+        background-color: var(--bq-bg);
+        color: var(--bq-text);
+        border-inline-start: 4px solid var(--bq-border);
+        border-radius: 0 var(--radius-md) var(--radius-md) 0;
+
+        /* Handle nested blockquotes gracefully */
+        & .lbs-blockquote {
+            margin-block-start: var(--space-md);
+            margin-block-end: 0;
+        }
+    }
+
+    /* 
+   * Lists 
+   */
+    :where(.lbs-ul),
+    :where(.lbs-ol) {
+        margin-block-end: var(--space-md);
+        padding-inline-start: var(--space-xl);
+    }
+
+    :where(.lbs-list-item) {
+        margin-block-end: var(--space-xs);
+
+        /* Nesting */
+        &>.lbs-ul,
+        &>.lbs-ol {
+            margin-block-start: var(--space-xs);
+            margin-block-end: 0;
+        }
+    }
+
+    /* Checkbox styling */
+    :where(.lbs-checkbox) {
+        --check-color: var(--md-sys-color-primary);
+        accent-color: var(--check-color);
+        margin-inline-end: var(--space-sm);
+        transform: translateY(1px);
+    }
+
+    /* 
+   * Tables 
+   */
+    :where(.lbs-table) {
+        --table-border: var(--md-sys-color-outline-variant);
+        --table-header-bg: var(--md-sys-color-surface-variant);
+        --table-text: var(--md-sys-color-on-surface);
+
+        inline-size: 100%;
+        border-collapse: collapse;
+        margin-block-end: var(--space-lg);
+        color: var(--table-text);
+
+        th,
+        td {
+            padding: var(--space-sm) var(--space-md);
+            border: 1px solid var(--table-border);
+        }
+
+        th {
+            background-color: var(--table-header-bg);
+            font-weight: 600;
+            text-align: start;
+        }
+    }
+
+    :where(.lbs-table-silent) {
+
+        th,
+        td {
+            border: none;
+        }
+
+        th {
+            background-color: transparent;
+            border-block-end: 2px solid var(--table-border);
+        }
+    }
+
+    /* 
+   * Horizontal Rule 
+   */
+    :where(.lbs-hr) {
+        --hr-color: var(--md-sys-color-outline-variant);
+        block-size: 1px;
+        background-color: var(--hr-color);
+        border: none;
+        margin-block: var(--space-xl);
+    }
+
+    /* 
+   * Details Block 
+   */
+    :where(.lbs-details) {
+        --details-bg: var(--md-sys-color-surface);
+        --details-border: var(--md-sys-color-outline-variant);
+        --details-radius: var(--radius-md);
+
+        background-color: var(--details-bg);
+        border: 1px solid var(--details-border);
+        border-radius: var(--details-radius);
+        margin-block-end: var(--space-lg);
+        overflow: hidden;
+    }
+
+    :where(.lbs-summary) {
+        --summary-bg: var(--md-sys-color-surface-variant);
+        --summary-text: var(--md-sys-color-on-surface-variant);
+
+        padding: var(--space-md);
+        background-color: var(--summary-bg);
+        color: var(--summary-text);
+        font-weight: 600;
+        cursor: pointer;
+        user-select: none;
+
+        &::marker,
+        &::-webkit-details-marker {
+            color: var(--md-sys-color-primary);
+        }
+    }
+
+    /* Content inside details */
+    :where(.lbs-details)[open]>*:not(.lbs-summary) {
+        padding-inline: var(--space-md);
+    }
+
+    :where(.lbs-details)[open]>*:not(.lbs-summary):first-of-type {
+        margin-block-start: var(--space-md);
+    }
+
+    /* 
+   * Page Regions 
+   */
+    :where(.lbs-header) {
+        --region-bg: var(--md-sys-color-primary);
+        --region-text: var(--md-sys-color-on-primary);
+
+        background-color: var(--region-bg);
+        color: var(--region-text);
+        padding: var(--space-lg);
+        box-shadow: var(--md-sys-elevation-level2);
+        margin-block-end: var(--space-xl);
+
+        /* Headers inside region */
+        & .lbs-heading-1,
+        & .lbs-heading-2 {
+            --heading-color: var(--region-text);
+            margin-block-start: 0;
+            border: none;
+        }
+    }
+
+    :where(.lbs-footer) {
+        --region-bg: var(--md-sys-color-surface-variant);
+        --region-text: var(--md-sys-color-on-surface-variant);
+
+        background-color: var(--region-bg);
+        color: var(--region-text);
+        padding: var(--space-lg);
+        margin-block-start: var(--space-xl);
+        font: var(--md-sys-typescale-body-small);
+        text-align: center;
+    }
+
+    /* 
+   * Footnotes 
+   */
+    :where(.lbs-footnote-ref) {
+        --fn-color: var(--md-sys-color-primary);
+        font-size: 0.75em;
+        line-height: 0;
+        vertical-align: super;
+
+        a {
+            --link-color: var(--fn-color);
+        }
+    }
+
+    :where(.lbs-footnotes) {
+        margin-block-start: var(--space-xl);
+        padding-block-start: var(--space-md);
+        border-block-start: 1px solid var(--md-sys-color-outline-variant);
+        font: var(--md-sys-typescale-body-small);
+        color: var(--md-sys-color-on-surface-variant);
+    }
+
+    /*
+   * Images
+   */
+    :where(.lbs-image) {
+        border-radius: var(--radius-sm);
+        margin-block-end: var(--space-md);
+    }
+}
