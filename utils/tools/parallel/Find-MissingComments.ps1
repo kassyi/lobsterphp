@@ -26,7 +26,8 @@ $results = Get-ChildItem -Path $SearchPath -Include $Extensions -Recurse -File |
         }
 
         # PHPコンストラクタのプロモーションプロパティ（public string $code など）の検出
-        if ($line -match '__construct\s*\(' -or $line -match '\bconstructor\s*\(') {
+        # C# のプライマリコンストラクタ/レコードプロパティの検出
+        if ($line -match '__construct\s*\(' -or $line -match '\bconstructor\s*\(' -or $line -match '\b(?:class|record|struct)\s+\w+(?:<[^>]+>)?\s*\(') {
             if (-not ($line -match '\)')) {
                 $inConstructorParams = $true
             }
