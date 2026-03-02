@@ -3,6 +3,8 @@
     "sass": "^1.97.3"
   },
   "scripts": {
-    "build:css": "sass scss/style.scss docs/style.css"
+    "build:css": "sass scss/style.scss docs/style.css",
+    "watch:css": "sass --watch scss/style.scss docs/style.css",
+    "showcase": "php -S localhost:8000"
   }
 }
