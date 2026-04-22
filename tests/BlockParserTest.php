@@ -111,4 +111,36 @@ MD;
         $this->assertSame('left', $nodes[0]->alignments[0]->value);
         $this->assertSame('right', $nodes[0]->alignments[1]->value);
     }
+
+    public function testWarpInsideCodeFenceIsPlainText(): void {
+        $md = "```markdown\n:::warp my-block\nThis content can be placed anywhere.\n:::\n\nSee it here: [~my-block]\n```";
+        $parser = new BlockParser();
+        $doc = $parser->parseDocument($md);
+        
+        $this->assertArrayNotHasKey('my-block', $doc->warpDefs);
+        $this->assertCount(1, $doc->body);
+        $this->assertInstanceOf(CodeBlockNode::class, $doc->body[0]);
+        $this->assertStringContainsString(':::warp my-block', $doc->body[0]->code);
+        $this->assertStringContainsString('See it here: [~my-block]', $doc->body[0]->code);
+    }
+
+    public function testHeaderInsideCodeFenceIsPlainText(): void {
+        $md = "```\n:::header\n# Title\n:::\n```";
+        $parser = new BlockParser();
+        $doc = $parser->parseDocument($md);
+        
+        $this->assertNull($doc->header);
+        $this->assertCount(1, $doc->body);
+        $this->assertInstanceOf(CodeBlockNode::class, $doc->body[0]);
+    }
+
+    public function testDetailsInsideCodeFenceIsPlainText(): void {
+        $md = "~~~\n:::details Click me\nHidden content\n:::\n~~~";
+        $parser = new BlockParser();
+        $doc = $parser->parseDocument($md);
+        
+        $this->assertCount(1, $doc->body);
+        $this->assertInstanceOf(CodeBlockNode::class, $doc->body[0]);
+        $this->assertStringContainsString(':::details Click me', $doc->body[0]->code);
+    }
 }

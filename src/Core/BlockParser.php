@@ -218,9 +218,31 @@ class BlockParser {
         $i = 0;
         $len = count($lines);
         $lines = array_values($lines); // Reindex
+        $inCodeFence = null;
 
         while ($i < $len) {
             $line = $lines[$i];
+
+            if (preg_match('/^(`{3,}|~{3,})/', $line, $fenceMatch)) {
+                if ($inCodeFence === null) {
+                    $inCodeFence = $fenceMatch[1];
+                } else {
+                    $markerChar = $inCodeFence[0];
+                    $trimmedLine = rtrim($line);
+                    if (str_starts_with($line, $markerChar) && strlen($trimmedLine) >= strlen($inCodeFence) && $trimmedLine === str_repeat($markerChar, strlen($trimmedLine))) {
+                        $inCodeFence = null;
+                    }
+                }
+                $remainingLines[] = $line;
+                $i++;
+                continue;
+            }
+
+            if ($inCodeFence !== null) {
+                $remainingLines[] = $line;
+                $i++;
+                continue;
+            }
 
             if (preg_match('/^:::header\s*$/', $line)) {
                 $children = self::processCustomBlock($lines, $i, $len, $ctx, $warpDefs);

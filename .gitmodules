@@ -1,0 +1,3 @@
+[submodule ".upstream/lobsterjs"]
+	path = .upstream/lobsterjs
+	url = https://github.com/Hacknock/lobsterjs.git
